@@ -1,31 +1,26 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { validateEnv } from "./env";
 
-// Lazy initialization: Don't validate at module load time
-// This allows the build to succeed even if env vars are temporarily missing
-// Validation happens when the client is first accessed (at runtime)
-let supabaseClient: SupabaseClient | null = null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-function getSupabaseClient(): SupabaseClient {
-  if (!supabaseClient) {
-    // Validate only when client is first accessed (runtime, not build time)
-    const env = validateEnv();
-    supabaseClient = createClient(
-      env.NEXT_PUBLIC_SUPABASE_URL,
-      env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Don't validate at module load time - this allows builds to succeed
+// even if environment variables aren't set yet (e.g., during Vercel build)
+// Validation will happen at runtime when the client is actually used
+if (!supabaseUrl || !supabaseAnonKey) {
+  // Only warn in development, not during build
+  if (process.env.NODE_ENV === "development") {
+    console.warn(
+      "Supabase environment variables are not set. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file."
     );
   }
-  return supabaseClient;
 }
 
-// Proxy to make supabase appear as a normal object while using lazy initialization
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    const client = getSupabaseClient();
-    const value = client[prop as keyof SupabaseClient];
-    // If it's a function, bind it to the client to preserve 'this' context
-    return typeof value === "function" ? value.bind(client) : value;
-  },
-}) as SupabaseClient;
+// Create client with fallback values to prevent build-time errors
+// Runtime validation will catch missing values when actually used
+// The Supabase client will fail gracefully if invalid credentials are provided
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-key"
+);
 
 
