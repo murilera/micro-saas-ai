@@ -56,7 +56,7 @@ export async function PATCH(req: Request, ctx: ParamsPromise) {
       .from("api_keys")
       .select("user_id")
       .eq("id", id)
-      .single();
+      .single<{ user_id: string }>();
 
     if (checkError || !existing) {
       return NextResponse.json({ error: "API key not found." }, { status: 404 });
@@ -164,7 +164,7 @@ export async function DELETE(_req: Request, ctx: ParamsPromise) {
       .from("api_keys")
       .select("user_id")
       .eq("id", id)
-      .single();
+      .single<{ user_id: string }>();
 
     if (checkError || !existing) {
       return NextResponse.json({ error: "API key not found." }, { status: 404 });

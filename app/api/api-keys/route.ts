@@ -20,6 +20,14 @@ export async function GET() {
       return NextResponse.json({ error: "Invalid session." }, { status: 401 });
     }
 
+    // Validate environment variables at runtime
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return NextResponse.json(
+        { error: "Server configuration error." },
+        { status: 500 }
+      );
+    }
+
   const { data, error } = await supabase
     .from("api_keys")
     .select("*")

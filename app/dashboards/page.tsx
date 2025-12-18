@@ -7,6 +7,11 @@ import { isValidUUID } from "@/lib/utils";
 
 async function getInitialApiKeys(userId: string): Promise<ApiKey[]> {
   try {
+    // Validate environment variables at runtime (when actually used)
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      throw new Error("Supabase environment variables are not configured");
+    }
+
     const { data, error } = await supabase
       .from("api_keys")
       .select("*")
